@@ -3,11 +3,11 @@
 
 import { patract, network } from 'redspot';
 import { expect, fromSigner, setupContract } from '../../scripts/helpers';
-import { consts } from '../../scripts/constants';
+import { CONSTS, ROLES } from '../../scripts/constants';
 import { Signer } from 'redspot/types';
 import Contract from '@redspot/patract/contract';
-import { deploySystem } from '../../scripts/ourDeployRated';
-import { deployEmmitedToken, deployOracle, deployShareToken, deployVault } from '../../scripts/ourHelpers';
+import { deploySystem } from '../../scripts/setupProtocol';
+import { deployEmmitedToken, deployOracle, deployShareToken, deployVault } from '../../scripts/setupContracts';
 const { getSigners, api } = network;
 const random = require('random-bigint');
 
@@ -15,12 +15,12 @@ const E6: bigint = 1000000n;
 const STA_DEC: bigint = E6;
 const COL_DEC: bigint = E6 * E6;
 
-const ZERO_ADDRESS: string = consts.ZERO_ADDRESS;
-const MINIMUM_COLLATERAL_COEFICIENT_E6: bigint = consts.default.MINIMUM_COLLATERAL_COEFICIENT_E6;
-const COLLATERAL_STEP_VALUE_E6: bigint = consts.default.COLLATERAL_STEP_VALUE_E6;
-const INTEREST_RATE_STEP_VALUE_E12: bigint = consts.default.INTEREST_RATE_STEP_VALUE_E12;
+const ZERO_ADDRESS: string = CONSTS.ZERO_ADDRESS;
+const MINIMUM_COLLATERAL_COEFICIENT_E6: bigint = CONSTS.default.MINIMUM_COLLATERAL_COEFICIENT_E6;
+const COLLATERAL_STEP_VALUE_E6: bigint = CONSTS.default.COLLATERAL_STEP_VALUE_E6;
+const INTEREST_RATE_STEP_VALUE_E12: bigint = CONSTS.default.INTEREST_RATE_STEP_VALUE_E12;
 
-const COLLATERAL_DECIMALS: number = consts.COLLATERAL_DECIMALS;
+const COLLATERAL_DECIMALS: number = DEFAULTS.COLLATERAL_DECIMALS;
 
 describe.only('Vault', () => {
   let users: Signer[];
@@ -214,9 +214,9 @@ describe.only('Vault', () => {
       await fromSigner(oracleContract, owner.address).tx.feedAzeroUsdPriceE6(AZERO_USD_PRICE);
       // make vault MINTER and BURNER of mocked stablecoin
 
-      await fromSigner(stableCoinContract, owner.address).tx.setupRole(consts.MINTER, vaultContract.address.toString());
-      await fromSigner(stableCoinContract, owner.address).tx.setupRole(consts.BURNER, vaultContract.address.toString());
-      await fromSigner(stableCoinContract, owner.address).tx.setupRole(consts.VAULT, vaultContract.address.toString());
+      await fromSigner(stableCoinContract, owner.address).tx.setupRole(ROLES.MINTER, vaultContract.address.toString());
+      await fromSigner(stableCoinContract, owner.address).tx.setupRole(ROLES.BURNER, vaultContract.address.toString());
+      await fromSigner(stableCoinContract, owner.address).tx.setupRole(ROLES.VAULT, vaultContract.address.toString());
 
       // mint collateral to users and approve vault to spend
       for (let i = 0; i < 5; i++) {

@@ -1,9 +1,9 @@
 import { patract, network } from 'redspot';
 import { expect, fromSigner, setupContract } from '../scripts/helpers';
-import { consts } from '../scripts/constants';
+import { CONSTS } from '../scripts/constants';
 import { Signer } from 'redspot/types';
 import Contract from '@redspot/patract/contract';
-import { deploySystem } from '../scripts/ourDeployRated';
+import { deploySystem } from '../scripts/setupProtocol';
 const { getSigners, api } = network;
 
 const E6: bigint = 1000000n;

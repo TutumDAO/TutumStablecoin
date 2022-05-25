@@ -1,6 +1,6 @@
 import { AccountId } from '@polkadot/types/interfaces';
 import { expect, fromSigner, setupContract } from './helpers';
-import { consts } from './constants';
+import { CONSTS, DEFAULTS, ROLES } from './constants';
 import Contract from '@redspot/patract/contract';
 import { convertCompilerOptionsFromJson } from 'typescript';
 
@@ -16,7 +16,7 @@ export async function deployOracle(owner: string) {
   return ret;
 }
 
-export async function deployEmmitedToken(decimals: number | bigint = consts.STABLE_DECIMALS, owner: string) {
+export async function deployEmmitedToken(decimals: number | bigint = DEFAULTS.STABLE_DECIMALS, owner: string) {
   const ret = await setupContract('psp22_emitable_contract', 'new', 'stable_coin', 'description', decimals, owner);
   console.log(`deploy psp22_emitable_contract : at ${ret.contract.address.toString()}`);
   return ret;
@@ -31,7 +31,7 @@ export async function deployShareProfitController(stable_coin_address: string, o
 export async function deployShareToken(
   name: string = 'Tutum share',
   symbol: string = 'TUM',
-  decimals: number | bigint = consts.SHARES_DECIMALS,
+  decimals: number | bigint = DEFAULTS.SHARES_DECIMALS,
   owner: string
 ) {
   const ret = await setupContract('shares_token_contract', 'new', name, symbol, decimals, owner);
@@ -42,7 +42,7 @@ export async function deployShareToken(
 export async function deployStableCoin(
   name: string = 'USD Alpeh',
   symbol: string = 'USDA',
-  decimals: number | bigint = consts.STABLE_DECIMALS,
+  decimals: number | bigint = DEFAULTS.STABLE_DECIMALS,
   share_token_address: string,
   owner: string
 ) {
@@ -57,7 +57,7 @@ export async function deployStableController(measurerAddress: string, stableAddr
   return ret;
 }
 
-export async function deployCollateralMock(decimals: number | bigint = consts.COLLATERAL_DECIMALS, owner: string) {
+export async function deployCollateralMock(decimals: number | bigint = DEFAULTS.COLLATERAL_DECIMALS, owner: string) {
   const ret = await setupContract('psp22_emitable_contract', 'new', 'emitable_coin', 'sample_description', decimals, owner);
   console.log(`deploy psp22_emitable_contract : at ${ret.contract.address.toString()}`);
   return ret;
@@ -69,9 +69,9 @@ export async function deployVault(
   shareProfitControllerContract: string,
   collateralTokenAddress: string,
   stableTokenAddress: string,
-  maximumMinimumCollateralCoefficientE6: number | bigint = 2000000,
-  collateralStepValueE6: number | bigint = 0,
-  interestRateStepValue: number | bigint = 0,
+  maximumMinimumCollateralCoefficientE6: number | bigint = DEFAULTS.MINIMUM_COLLATERAL_COEFICIENT_E6,
+  collateralStepValueE6: number | bigint = DEFAULTS.COLLATERAL_STEP_VALUE_E6,
+  interestRateStepValueE12: number | bigint = DEFAULTS.INTEREST_RATE_STEP_VALUE_E12,
   owner: string
 ) {
   const ret = await setupContract(
@@ -84,7 +84,7 @@ export async function deployVault(
     stableTokenAddress,
     maximumMinimumCollateralCoefficientE6,
     collateralStepValueE6,
-    interestRateStepValue,
+    interestRateStepValueE12,
     owner
   );
   console.log(`deploy vault_contract : at ${ret.contract.address.toString()}`);
@@ -100,7 +100,7 @@ export async function deployVaultController(measurer_address: string, vault_addr
 export async function setupStableCoinContract(
   name: string = 'USD Alpeh',
   symbol: string = 'USDA',
-  decimals: number | bigint = consts.STABLE_DECIMALS,
+  decimals: number | bigint = DEFAULTS.STABLE_DECIMALS,
   measurerContract: Contract,
   sharesContract: Contract,
   owner: string
@@ -114,7 +114,7 @@ export async function setupStableCoinContract(
   );
 
   await fromSigner(stableCoinResults.contract, owner).tx.setStableControllerAddress(stableControllerResults.contract.address.toString());
-  await fromSigner(sharesContract, owner).tx.setupRole(consts.MINTER, stableCoinResults.contract.address.toString());
+  await fromSigner(sharesContract, owner).tx.setupRole(ROLES.MINTER, stableCoinResults.contract.address.toString());
   console.log('setup_stabe END');
   return { stableCoin: stableCoinResults, stableController: stableControllerResults };
 }
@@ -124,7 +124,7 @@ export async function setupSharesProfitControllerContract(stableCoinContract: Co
   const returns = await deployShareProfitController(stableCoinContract.address.toString(), owner);
   await fromSigner(stableCoinContract, owner).tx.setSharesProfitControllerAddress(returns.contract.address.toString());
   await fromSigner(returns.contract, owner).tx.setIsGenerator(stableCoinContract.address.toString(), true);
-  await fromSigner(stableCoinContract, owner).tx.setupRole(consts.MINTER, returns.contract.address.toString());
+  await fromSigner(stableCoinContract, owner).tx.setupRole(ROLES.MINTER, returns.contract.address.toString());
   console.log('setup_spcontroller STOP');
 
   return returns;
@@ -137,9 +137,9 @@ export async function setupVaultContract(
   sharesContract: Contract,
   collateralTokenContract: Contract,
   stableCoinContract: Contract,
-  maximumMinimumCollateralCoefficientE6: number | bigint = 2000000,
-  collateralStepValueE6: number | bigint = 0,
-  interestRateStepValue: number | bigint = 0,
+  maximumMinimumCollateralCoefficientE6: number | bigint = DEFAULTS.MINIMUM_COLLATERAL_COEFICIENT_E6,
+  collateralStepValueE6: number | bigint = DEFAULTS.COLLATERAL_STEP_VALUE_E6,
+  interestRateStepValueE12: number | bigint = DEFAULTS.INTEREST_RATE_STEP_VALUE_E12,
   owner: string
 ) {
   console.log('setup_vault START');
@@ -151,7 +151,7 @@ export async function setupVaultContract(
     stableCoinContract.address.toString(),
     maximumMinimumCollateralCoefficientE6,
     collateralStepValueE6,
-    interestRateStepValue,
+    interestRateStepValueE12,
     owner
   );
   const vaultControllerReturns = await deployVaultController(
@@ -161,10 +161,10 @@ export async function setupVaultContract(
   );
   await fromSigner(vaultReturns.contract, owner).tx.setVaultControllerAddress(vaultControllerReturns.contract.address.toString());
   await fromSigner(vaultReturns.contract, owner).tx.setLiquidatorAddress(owner);
-  await fromSigner(stableCoinContract, owner).tx.setupRole(consts.MINTER, vaultReturns.contract.address.toString());
-  await fromSigner(stableCoinContract, owner).tx.setupRole(consts.BURNER, vaultReturns.contract.address.toString());
-  await fromSigner(stableCoinContract, owner).tx.setupRole(consts.VAULT, vaultReturns.contract.address.toString());
-  await fromSigner(sharesContract, owner).tx.setupRole(consts.MINTER, vaultReturns.contract.address.toString());
+  await fromSigner(stableCoinContract, owner).tx.setupRole(ROLES.MINTER, vaultReturns.contract.address.toString());
+  await fromSigner(stableCoinContract, owner).tx.setupRole(ROLES.BURNER, vaultReturns.contract.address.toString());
+  await fromSigner(stableCoinContract, owner).tx.setupRole(ROLES.VAULT, vaultReturns.contract.address.toString());
+  await fromSigner(sharesContract, owner).tx.setupRole(ROLES.MINTER, vaultReturns.contract.address.toString());
   await fromSigner(sharesProfitControllerContract, owner).tx.setIsGenerator(vaultReturns.contract.address.toString(), true);
   console.log('setup_vault END');
   return { vault: vaultReturns, vaultController: vaultControllerReturns };

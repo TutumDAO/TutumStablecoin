@@ -1,11 +1,11 @@
 import { patract, network } from 'redspot';
 import { AccountId } from '@polkadot/types/interfaces';
 import { expect, fromSigner, setupContract } from '../scripts/helpers';
-import { deploySystem } from '../scripts/ourDeployRated';
+import { deploySystem } from '../scripts/setupProtocol';
 import { Signer } from 'redspot/types';
 import Contract from '@redspot/patract/contract';
 const { getSigners, api } = network;
-import { consts } from '../scripts/constants';
+import { CONSTS, ROLES } from '../scripts/constants';
 
 const DECIMALS = 18;
 describe('Deployment', () => {
@@ -77,16 +77,16 @@ describe('Deployment', () => {
 
     it('check role assignations', async () => {
       console.log('share_token');
-      await expect(sharesContract.query.hasRole(consts.MINTER, vaultContract.address)).to.have.output(true);
-      await expect(sharesContract.query.hasRole(consts.MINTER, stableCoinContract.address)).to.have.output(true);
+      await expect(sharesContract.query.hasRole(ROLES.MINTER, vaultContract.address)).to.have.output(true);
+      await expect(sharesContract.query.hasRole(ROLES.MINTER, stableCoinContract.address)).to.have.output(true);
       console.log('shares_profit_controller');
       await expect(sharesProfitControllerContract.query.isGenerator(vaultContract.address.toString())).to.have.output(true);
       await expect(sharesProfitControllerContract.query.isGenerator(stableCoinContract.address.toString())).to.have.output(true);
       console.log('stable_coint');
-      await expect(stableCoinContract.query.hasRole(consts.MINTER, vaultContract.address)).to.have.output(true);
-      await expect(stableCoinContract.query.hasRole(consts.BURNER, vaultContract.address)).to.have.output(true);
-      await expect(stableCoinContract.query.hasRole(consts.VAULT, vaultContract.address)).to.have.output(true);
-      await expect(stableCoinContract.query.hasRole(consts.MINTER, sharesProfitControllerContract.address)).to.have.output(true);
+      await expect(stableCoinContract.query.hasRole(ROLES.MINTER, vaultContract.address)).to.have.output(true);
+      await expect(stableCoinContract.query.hasRole(ROLES.BURNER, vaultContract.address)).to.have.output(true);
+      await expect(stableCoinContract.query.hasRole(ROLES.VAULT, vaultContract.address)).to.have.output(true);
+      await expect(stableCoinContract.query.hasRole(ROLES.MINTER, sharesProfitControllerContract.address)).to.have.output(true);
     });
   });
 });

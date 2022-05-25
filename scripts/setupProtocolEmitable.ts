@@ -8,8 +8,8 @@ import {
   deployShareProfitController,
   setupVaultContract,
   setupSharesProfitControllerContract,
-} from './ourHelpers';
-import { consts } from './constants';
+} from './setupContracts';
+import { CONSTS } from './constants';
 import { fromSigner } from './helpers';
 
 const INIT_AZERO_USD_PRICE_E6 = 1200000;
@@ -19,11 +19,11 @@ export async function deploySystem(owner: Signer) {
   await fromSigner(oracleContract, owner.address).tx.feedAzeroUsdPriceE6(INIT_AZERO_USD_PRICE_E6);
   const { contract: measurerContract } = await deployMeasurer(oracleContract.address.toString(), owner.address);
   const { contract: sharesContract } = await deployShareToken(undefined, undefined, undefined, owner.address);
-  const { contract: stableCoinContract } = await deployCollateralMock(consts.STABLE_DECIMALS, owner.address);
+  const { contract: stableCoinContract } = await deployCollateralMock(DEFAULTS.STABLE_DECIMALS, owner.address);
 
   const { contract: sharesProfitControllerContract } = await setupSharesProfitControllerContract(stableCoinContract, owner.address);
 
-  const { contract: collateralTokenContract } = await deployCollateralMock(consts.COLLATERAL_DECIMALS, owner.address);
+  const { contract: collateralTokenContract } = await deployCollateralMock(DEFAULTS.COLLATERAL_DECIMALS, owner.address);
 
   const vaultSetupResults = await setupVaultContract(
     oracleContract,
