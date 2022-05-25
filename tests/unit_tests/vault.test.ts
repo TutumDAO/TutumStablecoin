@@ -1,28 +1,23 @@
 // here vault functinoalites are tested
 // while all other contract parameters stay static
 
-import { patract, network } from 'redspot';
+import { network } from 'redspot';
 import { expect, fromSigner, setupContract } from '../../scripts/helpers';
-import { CONSTS, ROLES } from '../../scripts/constants';
+import { DEFAULTS, ROLES } from '../../scripts/constants';
 import { Signer } from 'redspot/types';
 import Contract from '@redspot/patract/contract';
 import { deploySystem } from '../../scripts/setupProtocol';
-import { deployEmmitedToken, deployOracle, deployShareToken, deployVault } from '../../scripts/setupContracts';
+import { mintDummyAndApprove } from '../helpers/contractHelpers';
+import { randomNumber, randomBigInt } from '../helpers/math';
 const { getSigners, api } = network;
-const random = require('random-bigint');
 
 const E6: bigint = 1000000n;
 const STA_DEC: bigint = E6;
 const COL_DEC: bigint = E6 * E6;
 
-const ZERO_ADDRESS: string = CONSTS.ZERO_ADDRESS;
-const MINIMUM_COLLATERAL_COEFICIENT_E6: bigint = CONSTS.default.MINIMUM_COLLATERAL_COEFICIENT_E6;
-const COLLATERAL_STEP_VALUE_E6: bigint = CONSTS.default.COLLATERAL_STEP_VALUE_E6;
-const INTEREST_RATE_STEP_VALUE_E12: bigint = CONSTS.default.INTEREST_RATE_STEP_VALUE_E12;
+const MINIMUM_COLLATERAL_COEFICIENT_E6: bigint = DEFAULTS.MINIMUM_COLLATERAL_COEFICIENT_E6;
 
-const COLLATERAL_DECIMALS: number = DEFAULTS.COLLATERAL_DECIMALS;
-
-describe.only('Vault', () => {
+describe('Vault', () => {
   let users: Signer[];
   let owner: Signer;
   let oracleContract: Contract;
@@ -33,7 +28,7 @@ describe.only('Vault', () => {
   let vaultContract: Contract;
   let vaultControllerContract: Contract;
 
-  beforeEach('setup system', async () => {
+  beforeEach('setup system with DEFAULTS', async () => {
     users = await getSigners();
     owner = users.shift() as Signer;
     const contracts = await deploySystem(owner);
@@ -201,7 +196,7 @@ describe.only('Vault', () => {
     });
   });
 
-  describe.only('Emiting actions', async () => {
+  describe('Emiting actions', async () => {
     const VAULTS_NUMBER = 20;
     let vaultOwnerId: number[];
     let depositedAmounts: bigint[];
@@ -272,7 +267,7 @@ describe.only('Vault', () => {
       });
     });
 
-    describe.only('pay back', async () => {
+    describe('pay back', async () => {
       let vaultDebts: bigint[] = [];
       let usersDebts: bigint[] = [0n, 0n, 0n, 0n, 0n];
       let totalDebt: bigint = 0n;
@@ -310,16 +305,3 @@ describe.only('Vault', () => {
     });
   });
 });
-
-function randomBigInt(modulo: bigint): bigint {
-  return BigInt(random(128)) % modulo;
-}
-
-function randomNumber(modulo: number): number {
-  return Math.floor(Math.random() * modulo);
-}
-
-async function mintDummyAndApprove(token: Contract, user: Signer, amount: bigint | number, approve: Contract) {
-  await fromSigner(token, user.address).tx.mintAnyCaller(user.address, amount);
-  await fromSigner(token, user.address).tx.approve(approve.address, amount);
-}
