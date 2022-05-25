@@ -318,9 +318,6 @@ pub mod vault {
         // updates debt and pay back some debt
         #[ink(message)]
         fn pay_back_token(&mut self, vault_id: u128, amount: Balance) -> Result<(), VaultError> {
-            if self.env().caller() != self.liquidator_address {
-                return Err(VaultError::Liquidator);
-            }
             let vault_owner: AccountId = self.owner_of(Id::U128(vault_id)).unwrap_or_default();
             if self.env().caller() != vault_owner {
                 return Err(VaultError::VaultOwnership);
@@ -353,6 +350,9 @@ pub mod vault {
         #[ink(message)]
         fn buy_risky_vault(&mut self, vault_id: u128) -> Result<(), VaultError> {
             let caller = self.env().caller();
+            if caller != self.liquidator_address {
+                return Err(VaultError::Liquidator);
+            }
             let vault_owner: AccountId = self.owner_of(Id::U128(vault_id)).unwrap_or_default();
 
             //check if debt_ceiling >= debt, if it is return, else continiue and buy risky vault
@@ -573,36 +573,39 @@ pub mod vault {
                 last_interest_coefficient_e12
             );
             // update
-            let mut updated_debt =
-                debt * current_interest_coefficient_e12 / last_interest_coefficient_e12;
-            if updated_debt != 0 {
-                updated_debt += 1; // round up
-            }
-            ink_env::debug_println!("updated_debt: {}", updated_debt);
-            let vault_owner = self._owner_of(&Id::U128(vault_id)).unwrap_or_default(); //there will always be non default owner as owner must be caller. it is chacked before each _update_vault call
-            if updated_debt > debt {
-                self._add_profit_and_increase_shares_minting_allowance(
-                    updated_debt - debt,
-                    vault_owner,
-                );
-                PSP22RatedRef::add_account_debt(
-                    &self.emit.emited_token_address,
-                    vault_owner,
-                    updated_debt - debt,
-                )?;
-            } else if updated_debt < debt {
-                self._sub_profit(debt - updated_debt);
-                PSP22RatedRef::sub_account_debt(
-                    &self.emit.emited_token_address,
-                    vault_owner,
-                    debt - updated_debt,
-                )?;
-            }
-            //TODO calculate share toekn rewards and mint
-            self.debt_by_id.insert(&vault_id, &updated_debt);
-            self.last_interest_coefficient_by_id_e12
-                .insert(&vault_id, &current_interest_coefficient_e12);
+            let mut updated_debt = debt;
 
+            if current_interest_coefficient_e12 != last_interest_coefficient_e12 {
+                updated_debt =
+                    debt * current_interest_coefficient_e12 / last_interest_coefficient_e12;
+                if updated_debt != 0 {
+                    updated_debt += 1; // round up
+                }
+                ink_env::debug_println!("updated_debt: {}", updated_debt);
+                let vault_owner = self._owner_of(&Id::U128(vault_id)).unwrap_or_default(); //there will always be non default owner as owner must be caller. it is chacked before each _update_vault call
+                if updated_debt > debt {
+                    self._add_profit_and_increase_shares_minting_allowance(
+                        updated_debt - debt,
+                        vault_owner,
+                    );
+                    PSP22RatedRef::add_account_debt(
+                        &self.emit.emited_token_address,
+                        vault_owner,
+                        updated_debt - debt,
+                    )?;
+                } else if updated_debt < debt {
+                    self._sub_profit(debt - updated_debt);
+                    PSP22RatedRef::sub_account_debt(
+                        &self.emit.emited_token_address,
+                        vault_owner,
+                        debt - updated_debt,
+                    )?;
+                }
+                //TODO calculate share toekn rewards and mint
+                self.debt_by_id.insert(&vault_id, &updated_debt);
+                self.last_interest_coefficient_by_id_e12
+                    .insert(&vault_id, &current_interest_coefficient_e12);
+            }
             Ok(updated_debt)
         }
 

@@ -16,7 +16,7 @@ export async function deployOracle(owner: string) {
   return ret;
 }
 
-export async function deployEmmitedToken(decimals: number = consts.STABLE_DECIMALS, owner: string) {
+export async function deployEmmitedToken(decimals: number | bigint = consts.STABLE_DECIMALS, owner: string) {
   const ret = await setupContract('psp22_emitable_contract', 'new', 'stable_coin', 'description', decimals, owner);
   console.log(`deploy psp22_emitable_contract : at ${ret.contract.address.toString()}`);
   return ret;
@@ -31,7 +31,7 @@ export async function deployShareProfitController(stable_coin_address: string, o
 export async function deployShareToken(
   name: string = 'Tutum share',
   symbol: string = 'TUM',
-  decimals: number = consts.SHARES_DECIMALS,
+  decimals: number | bigint = consts.SHARES_DECIMALS,
   owner: string
 ) {
   const ret = await setupContract('shares_token_contract', 'new', name, symbol, decimals, owner);
@@ -42,7 +42,7 @@ export async function deployShareToken(
 export async function deployStableCoin(
   name: string = 'USD Alpeh',
   symbol: string = 'USDA',
-  decimals: number = consts.STABLE_DECIMALS,
+  decimals: number | bigint = consts.STABLE_DECIMALS,
   share_token_address: string,
   owner: string
 ) {
@@ -57,7 +57,7 @@ export async function deployStableController(measurerAddress: string, stableAddr
   return ret;
 }
 
-export async function deployCollateralMock(decimals: number = consts.COLLATERAL_DECIMALS, owner: string) {
+export async function deployCollateralMock(decimals: number | bigint = consts.COLLATERAL_DECIMALS, owner: string) {
   const ret = await setupContract('psp22_emitable_contract', 'new', 'emitable_coin', 'sample_description', decimals, owner);
   console.log(`deploy psp22_emitable_contract : at ${ret.contract.address.toString()}`);
   return ret;
@@ -69,9 +69,9 @@ export async function deployVault(
   shareProfitControllerContract: string,
   collateralTokenAddress: string,
   stableTokenAddress: string,
-  maximumMinimumCollateralCoefficientE6: number = 2000000,
-  collateralStepValueE6: number = 10000,
-  interestRateStepValue: number = 0,
+  maximumMinimumCollateralCoefficientE6: number | bigint = 2000000,
+  collateralStepValueE6: number | bigint = 0,
+  interestRateStepValue: number | bigint = 0,
   owner: string
 ) {
   const ret = await setupContract(
@@ -100,7 +100,7 @@ export async function deployVaultController(measurer_address: string, vault_addr
 export async function setupStableCoinContract(
   name: string = 'USD Alpeh',
   symbol: string = 'USDA',
-  decimals: number = consts.STABLE_DECIMALS,
+  decimals: number | bigint = consts.STABLE_DECIMALS,
   measurerContract: Contract,
   sharesContract: Contract,
   owner: string
@@ -122,13 +122,10 @@ export async function setupStableCoinContract(
 export async function setupSharesProfitControllerContract(stableCoinContract: Contract, owner: string) {
   console.log('setup_spcontroller START');
   const returns = await deployShareProfitController(stableCoinContract.address.toString(), owner);
-  console.log('setup_spcontroller START');
   await fromSigner(stableCoinContract, owner).tx.setSharesProfitControllerAddress(returns.contract.address.toString());
-  console.log('setup_spcontroller START');
   await fromSigner(returns.contract, owner).tx.setIsGenerator(stableCoinContract.address.toString(), true);
-  console.log('setup_spcontroller START');
   await fromSigner(stableCoinContract, owner).tx.setupRole(consts.MINTER, returns.contract.address.toString());
-  console.log('setup_spcontroller START');
+  console.log('setup_spcontroller STOP');
 
   return returns;
 }
@@ -140,9 +137,9 @@ export async function setupVaultContract(
   sharesContract: Contract,
   collateralTokenContract: Contract,
   stableCoinContract: Contract,
-  maximumMinimumCollateralCoefficientE6: number = 2000000,
-  collateralStepValueE6: number = 10000,
-  interestRateStepValue: number = 0,
+  maximumMinimumCollateralCoefficientE6: number | bigint = 2000000,
+  collateralStepValueE6: number | bigint = 0,
+  interestRateStepValue: number | bigint = 0,
   owner: string
 ) {
   console.log('setup_vault START');

@@ -31,7 +31,7 @@ describe('Vault', () => {
     vaultControllerContract = contracts.vaultControllerContract;
   });
 
-  describe.only('vaults creation and destruction', async () => {
+  describe('vaults creation and destruction', async () => {
     it('owner creates a vault and mints an nft', async () => {
       await expect(fromSigner(vaultContract, owner.address).tx.createVault()).to.eventually.be.fulfilled;
       await expect(vaultContract.query.totalSupply()).to.have.output(1);
