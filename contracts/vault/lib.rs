@@ -264,7 +264,6 @@ pub mod vault {
             ink_env::debug_println!("check_undercollateralize3 {}", vault_debt);
             if vault_debt * self.current_minimum_collateral_coefficient_e6
                 > self._collateral_value_e6(collateral_after)
-            //TODO something is wrong here
             {
                 return Err(VaultError::CollateralBelowMinimum);
             }
@@ -601,7 +600,6 @@ pub mod vault {
                         debt - updated_debt,
                     )?;
                 }
-                //TODO calculate share toekn rewards and mint
                 self.debt_by_id.insert(&vault_id, &updated_debt);
                 self.last_interest_coefficient_by_id_e12
                     .insert(&vault_id, &current_interest_coefficient_e12);
