@@ -9,7 +9,7 @@ import {
   setupVaultContract,
   setupSharesProfitControllerContract,
 } from './setupContracts';
-import { CONSTS } from './constants';
+import { DEFAULTS } from './constants';
 import { fromSigner } from './helpers';
 
 const INIT_AZERO_USD_PRICE_E6 = 1200000;
