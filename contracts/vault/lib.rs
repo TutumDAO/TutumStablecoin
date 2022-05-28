@@ -160,26 +160,26 @@ pub mod vault {
         // mints a NFT to caller that represent vault
         #[ink(message)]
         fn create_vault(&mut self) -> Result<(), VaultError> {
-            ink_env::debug_println!("create_vault START");
+            //  ink_env::debug_println!("create_vault START");
             let caller = self.env().caller();
             let next_id = self.next_id;
 
             self._mint_to(caller, Id::U128(next_id))?;
             self.debt_by_id.insert(&next_id, &(0));
-            ink_env::debug_println!("create_vault debt: {}", self._get_debt_by_id(&next_id));
+            //ink_env::debug_println!("create_vault debt: {}", self._get_debt_by_id(&next_id));
             self.collateral_by_id.insert(&next_id, &(0));
             self.last_interest_coefficient_by_id_e12
                 .insert(&next_id, &(self.current_interest_coefficient_e12));
-            ink_env::debug_println!("create_vault2 debt: {}", self._get_debt_by_id(&next_id));
+            //ink_env::debug_println!("create_vault2 debt: {}", self._get_debt_by_id(&next_id));
             self.next_id += 1;
-            ink_env::debug_println!("create_vault STOP");
+            //  ink_env::debug_println!("create_vault STOP");
             Ok(())
         }
 
         // burns a NFT from a caller that represent vault
         #[ink(message)]
         fn destroy_vault(&mut self, vault_id: u128) -> Result<(), VaultError> {
-            ink_env::debug_println!("destroy_vault START");
+            //  ink_env::debug_println!("destroy_vault START");
             let vault_owner: AccountId = match self._owner_of(&Id::U128(vault_id)) {
                 Some(v) => v,
                 None => return Err(VaultError::OwnerUnexists),
@@ -194,7 +194,7 @@ pub mod vault {
                 return Err(VaultError::NotEmpty);
             }
             self._burn_from(vault_owner, Id::U128(vault_id))?;
-            ink_env::debug_println!("destroy_vault STOP");
+            //  ink_env::debug_println!("destroy_vault STOP");
             Ok(())
         }
 
@@ -205,11 +205,11 @@ pub mod vault {
             vault_id: u128,
             amount: Balance,
         ) -> Result<(), VaultError> {
-            ink_env::debug_println!("deposit_collateral START");
-            ink_env::debug_println!(
-                "deposit_collateral debt: {}",
-                self._get_debt_by_id(&vault_id)
-            );
+            //  ink_env::debug_println!("deposit_collateral START");
+            // ink_env::debug_println!(
+            //     "deposit_collateral debt: {}",
+            //     self._get_debt_by_id(&vault_id)
+            // );
             let vault_owner: AccountId = self.owner_of(Id::U128(vault_id)).unwrap_or_default();
             if self.env().caller() != vault_owner {
                 return Err(VaultError::VaultOwnership);
@@ -223,11 +223,11 @@ pub mod vault {
 
             // /event
             self._emit_deposit_event(vault_id, collateral);
-            ink_env::debug_println!(
-                "deposit_collateral2 debt: {}",
-                self._get_debt_by_id(&vault_id)
-            );
-            ink_env::debug_println!("deposit_collateral STOP");
+            // ink_env::debug_println!(
+            //     "deposit_collateral2 debt: {}",
+            //     self._get_debt_by_id(&vault_id)
+            // );
+            //  ink_env::debug_println!("deposit_collateral STOP");
             Ok(())
         }
 
@@ -238,11 +238,11 @@ pub mod vault {
             vault_id: u128,
             amount: Balance,
         ) -> Result<(), VaultError> {
-            ink_env::debug_println!("withdraw_collateral START");
-            ink_env::debug_println!(
-                "withdraw_collateral debt: {}",
-                self._get_debt_by_id(&vault_id)
-            );
+            //  ink_env::debug_println!("withdraw_collateral START");
+            // ink_env::debug_println!(
+            //     "withdraw_collateral debt: {}",
+            //     self._get_debt_by_id(&vault_id)
+            // );
             let vault_owner: AccountId = self.owner_of(Id::U128(vault_id)).unwrap_or_default();
             if self.env().caller() != vault_owner {
                 return Err(VaultError::VaultOwnership);
@@ -255,13 +255,13 @@ pub mod vault {
             }
 
             // check if after withdraw vault is not undercollaterized
-            ink_env::debug_println!(
-                "check_undercollateralize debt {}",
-                self._get_debt_by_id(&vault_id)
-            );
+            // ink_env::debug_println!(
+            //     "check_undercollateralize debt {}",
+            //     self._get_debt_by_id(&vault_id)
+            // );
             let vault_debt = self._update_vault_debt(vault_id)?;
             let collateral_after = vault_collateral - amount;
-            ink_env::debug_println!("check_undercollateralize3 {}", vault_debt);
+            //  ink_env::debug_println!("check_undercollateralize3 {}", vault_debt);
             if vault_debt * self.current_minimum_collateral_coefficient_e6
                 > self._collateral_value_e6(collateral_after)
             {
@@ -269,15 +269,15 @@ pub mod vault {
             }
 
             // transfer out and decrease collateral
-            ink_env::debug_println!("transfer_out");
+            //  ink_env::debug_println!("transfer_out");
             self.collateral_by_id.insert(&vault_id, &collateral_after);
-            ink_env::debug_println!("transfer_out2");
+            //  ink_env::debug_println!("transfer_out2");
             self._transfer_collateral_out(vault_owner, amount)?;
 
             //event
-            ink_env::debug_println!("event");
+            //  ink_env::debug_println!("event");
             self._emit_deposit_event(vault_id, collateral_after);
-            ink_env::debug_println!("withdraw_collateral STOP");
+            //  ink_env::debug_println!("withdraw_collateral STOP");
 
             Ok(())
         }
@@ -286,9 +286,9 @@ pub mod vault {
         #[ink(message)]
         #[brush::modifiers(when_not_paused)]
         fn borrow_token(&mut self, vault_id: u128, amount: Balance) -> Result<(), VaultError> {
-            ink_env::debug_println!("borrow_token START");
-            ink_env::debug_println!("amount: {}", amount);
-            ink_env::debug_println!("debt: {}", self._get_debt_by_id(&vault_id));
+            //  ink_env::debug_println!("borrow_token START");
+            // ink_env::debug_println!("amount: {}", amount);
+            // ink_env::debug_println!("debt: {}", self._get_debt_by_id(&vault_id));
             let vault_owner: AccountId = self.owner_of(Id::U128(vault_id)).unwrap_or_default();
             if self.env().caller() != vault_owner {
                 return Err(VaultError::VaultOwnership);
@@ -306,7 +306,7 @@ pub mod vault {
             PSP22RatedRef::add_account_debt(&self.emit.emited_token_address, vault_owner, amount)?;
 
             self.total_debt += amount;
-            ink_env::debug_println!("amount: {}", amount);
+            // ink_env::debug_println!("amount: {}", amount);
             self._mint_emited_token(vault_owner, amount)?;
 
             //event
@@ -348,19 +348,23 @@ pub mod vault {
         // if vault has not enough collateral, callers pays back whole debt
         #[ink(message)]
         fn buy_risky_vault(&mut self, vault_id: u128) -> Result<(), VaultError> {
+            ink_env::debug_println!("buy_risky_vault with id: {}", vault_id);
             let caller = self.env().caller();
             if caller != self.liquidator_address {
+                ink_env::debug_println!("VaultError::Liquidator");
                 return Err(VaultError::Liquidator);
             }
-            let vault_owner: AccountId = self.owner_of(Id::U128(vault_id)).unwrap_or_default();
 
             //check if debt_ceiling >= debt, if it is return, else continiue and buy risky vault
             let debt_ceiling: Balance = self._get_debt_ceiling(vault_id);
             let debt = self._update_vault_debt(vault_id)?;
             if debt_ceiling >= debt {
+                ink_env::debug_println!("debt_ceiling: {} || debt: {}", debt_ceiling, debt);
+                ink_env::debug_println!("VaultError::CollateralAboveMinimum");
                 return Err(VaultError::CollateralAboveMinimum);
             }
 
+            let vault_owner: AccountId = self.owner_of(Id::U128(vault_id)).unwrap_or_default();
             // regulating vault so it is not undercollaterized
             self._burn_emited_token(caller, debt)?;
             self.debt_by_id.insert(&vault_id, &(0));
@@ -535,23 +539,29 @@ pub mod vault {
 
         // return maximal debt for a vault
         fn _get_debt_ceiling(&self, vault_id: u128) -> Balance {
-            ink_env::debug_println!("_get_debt_ceiling:");
+            //  ink_env::debug_println!("_get_debt_ceiling:");
             let debt_ceiling = self._vault_collateral_value_e6(vault_id) * E6
                 / self.current_minimum_collateral_coefficient_e6;
+            // ink_env::debug_println!("_get_debt_ceiling | ceiling: {}", debt_ceiling);
             debt_ceiling
         }
 
         // returns value of vaults collateral
         fn _vault_collateral_value_e6(&self, vault_id: u128) -> u128 {
-            ink_env::debug_println!("_vault_collateral_value_e6:");
+            //  ink_env::debug_println!("_vault_collateral_value_e6:");
             let collateral = self._get_collateral_by_id(&vault_id);
             self._collateral_value_e6(collateral)
         }
 
         // collateral amount -> collateral value
         fn _collateral_value_e6(&self, collateral: Balance) -> u128 {
-            ink_env::debug_println!("_collateral_value_e6:");
             let collateral_price_e6 = OraclingRef::get_azero_usd_price_e6(&self.oracle_address);
+            // ink_env::debug_println!(
+            //     "_collateral_value_e6 | collateral: {}, collateral_price {}, result: {}",
+            //     collateral,
+            //     collateral_price_e6,
+            //     collateral * collateral_price_e6 / COLLATERAL_DECIMALS
+            // );
             collateral * collateral_price_e6 / COLLATERAL_DECIMALS
         }
 
@@ -562,15 +572,15 @@ pub mod vault {
             let last_interest_coefficient_e12 =
                 self._get_last_interest_coefficient_by_id_e12(&vault_id);
             let debt = self._get_debt_by_id(&vault_id);
-            ink_env::debug_println!("debt: {}", debt);
-            ink_env::debug_println!(
-                "current_interest_coefficient_e12: {}",
-                current_interest_coefficient_e12
-            );
-            ink_env::debug_println!(
-                "last_interest_coefficient_e12: {}",
-                last_interest_coefficient_e12
-            );
+            // ink_env::debug_println!("debt: {}", debt);
+            // ink_env::debug_println!(
+            //     "current_interest_coefficient_e12: {}",
+            //     current_interest_coefficient_e12
+            // );
+            // ink_env::debug_println!(
+            //     "last_interest_coefficient_e12: {}",
+            //     last_interest_coefficient_e12
+            // );
             // update
             let mut updated_debt = debt;
 
@@ -580,7 +590,7 @@ pub mod vault {
                 if updated_debt != 0 {
                     updated_debt += 1; // round up
                 }
-                ink_env::debug_println!("updated_debt: {}", updated_debt);
+                //  ink_env::debug_println!("updated_debt: {}", updated_debt);
                 let vault_owner = self._owner_of(&Id::U128(vault_id)).unwrap_or_default(); //there will always be non default owner as owner must be caller. it is chacked before each _update_vault call
                 if updated_debt > debt {
                     self._add_profit_and_increase_shares_minting_allowance(
