@@ -439,7 +439,11 @@ pub mod stable_coin {
             amount: Balance,
         ) -> Result<(), PSP22Error> {
             let account_debt: Balance = self._account_debt(&account);
-            self.account_debt.insert(&account, &(account_debt - amount));
+            if account_debt > amount {
+                self.account_debt.insert(&account, &(account_debt - amount));
+            } else {
+                self.account_debt.insert(&account, &(0));
+            };
             Ok(())
         }
     }
