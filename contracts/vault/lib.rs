@@ -7,6 +7,7 @@ pub mod vault {
         contracts::{ownable::*, pausable::*, psp22::*, psp34::extensions::metadata::*, psp34::*},
         modifiers,
     };
+    use ink_env::format;
     use ink_lang::codegen::EmitEvent;
     use ink_lang::codegen::Env;
     use ink_prelude::string::ToString;
@@ -74,7 +75,7 @@ pub mod vault {
         // mutables_external
         pub oracle_address: AccountId,
         pub controller_address: AccountId, // controlling_contract
-        pub liquidator_address: AccountId,
+        pub liquidator_address: Option<AccountId>,
 
         //// vault parameters
         pub current_interest_rate_e12: i128, // interest_rate_step_value_e12 * current_interest_step( which is stored in vault_controller)
@@ -122,6 +123,7 @@ pub mod vault {
                 instance.collateral_step_value_e6 = collateral_step_value_e6;
                 instance.interest_rate_step_value_e12 = interest_rate_step_value_e12;
                 instance._init_with_owner(owner);
+                instance.liquidator_address = None;
             })
         }
 
@@ -222,7 +224,7 @@ pub mod vault {
                 .insert(&vault_id, &(collateral + amount));
 
             // /event
-            self._emit_deposit_event(vault_id, collateral);
+            self._emit_deposit_event(vault_id, collateral + amount);
             // ink_env::debug_println!(
             //     "deposit_collateral2 debt: {}",
             //     self._get_debt_by_id(&vault_id)
@@ -276,7 +278,7 @@ pub mod vault {
 
             //event
             //  ink_env::debug_println!("event");
-            self._emit_deposit_event(vault_id, collateral_after);
+            self._emit_withdraw_event(vault_id, collateral_after);
             //  ink_env::debug_println!("withdraw_collateral STOP");
 
             Ok(())
@@ -303,14 +305,14 @@ pub mod vault {
 
             // increase debt and borrow tokens
             self.debt_by_id.insert(&vault_id, &(debt + amount));
+            self.total_debt += amount;
             PSP22RatedRef::add_account_debt(&self.emit.emited_token_address, vault_owner, amount)?;
 
-            self.total_debt += amount;
             // ink_env::debug_println!("amount: {}", amount);
             self._mint_emited_token(vault_owner, amount)?;
 
             //event
-            self._emit_borrow_event(vault_id, amount);
+            self._emit_borrow_event(vault_id, debt + amount);
             Ok(())
         }
 
@@ -331,7 +333,7 @@ pub mod vault {
                     debt,
                 )?;
                 self.total_debt -= debt;
-                self._emit_pay_back_event(vault_id, debt);
+                self._emit_pay_back_event(vault_id, 0);
             } else {
                 self._burn_emited_token(vault_owner, amount)?;
                 self.debt_by_id.insert(&vault_id, &(debt - amount));
@@ -341,7 +343,7 @@ pub mod vault {
                     amount,
                 )?;
                 self.total_debt -= amount;
-                self._emit_pay_back_event(vault_id, amount);
+                self._emit_pay_back_event(vault_id, debt - amount);
             }
             Ok(())
         }
@@ -350,9 +352,18 @@ pub mod vault {
         fn buy_risky_vault(&mut self, vault_id: u128) -> Result<(), VaultError> {
             ink_env::debug_println!("buy_risky_vault with id: {}", vault_id);
             let caller = self.env().caller();
-            if caller != self.liquidator_address {
-                ink_env::debug_println!("VaultError::Liquidator");
-                return Err(VaultError::Liquidator);
+            match self.liquidator_address {
+                Some(x) => {
+                    if caller != x {
+                        ink_env::debug_println!(
+                            "VaultError::Liquidator -> caller: {} , liquidator: {}",
+                            ink_env::format!("{caller:?}"),
+                            ink_env::format!("{x:?}")
+                        );
+                        return Err(VaultError::Liquidator);
+                    }
+                }
+                None => {}
             }
 
             //check if debt_ceiling >= debt, if it is return, else continiue and buy risky vault
@@ -431,9 +442,16 @@ pub mod vault {
         #[modifiers(only_owner)]
         fn set_liquidator_address(
             &mut self,
-            new_liquidator_address: AccountId,
+            new_liquidator_address: Option<AccountId>,
         ) -> Result<(), VaultError> {
-            self.liquidator_address = new_liquidator_address;
+            match new_liquidator_address {
+                Some(x) => {
+                    self.liquidator_address = Some(x);
+                }
+                None => {
+                    self.liquidator_address = None;
+                }
+            }
             Ok(())
         }
     }
@@ -477,7 +495,7 @@ pub mod vault {
         }
 
         #[ink(message)]
-        fn get_liquidator_address(&self) -> AccountId {
+        fn get_liquidator_address(&self) -> Option<AccountId> {
             self.liquidator_address
         }
     }
@@ -602,6 +620,7 @@ pub mod vault {
                         vault_owner,
                         updated_debt - debt,
                     )?;
+                    self.total_debt += (updated_debt - debt);
                 } else if updated_debt < debt {
                     self._sub_profit(debt - updated_debt);
                     PSP22RatedRef::sub_account_debt(
@@ -609,6 +628,7 @@ pub mod vault {
                         vault_owner,
                         debt - updated_debt,
                     )?;
+                    self.total_debt -= (debt - updated_debt);
                 }
                 self.debt_by_id.insert(&vault_id, &updated_debt);
                 self.last_interest_coefficient_by_id_e12

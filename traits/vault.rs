@@ -58,7 +58,7 @@ pub trait Vault {
     #[ink(message)]
     fn set_liquidator_address(
         &mut self,
-        new_liquidator_address: AccountId,
+        new_liquidator_address: Option<AccountId>,
     ) -> Result<(), VaultError>;
 }
 
@@ -77,7 +77,7 @@ pub trait VaultView {
     #[ink(message)]
     fn get_debt_ceiling(&self, vault_id: u128) -> Balance;
     #[ink(message)]
-    fn get_liquidator_address(&self) -> AccountId;
+    fn get_liquidator_address(&self) -> Option<AccountId>;
 }
 pub trait VaultInternal {
     fn _emit_deposit_event(&self, _vault_id: u128, _current_collateral: Balance);

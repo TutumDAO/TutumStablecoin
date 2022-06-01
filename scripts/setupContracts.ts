@@ -160,7 +160,6 @@ export async function setupVaultContract(
     owner
   );
   await fromSigner(vaultReturns.contract, owner).tx.setVaultControllerAddress(vaultControllerReturns.contract.address.toString());
-  await fromSigner(vaultReturns.contract, owner).tx.setLiquidatorAddress(owner);
   await fromSigner(stableCoinContract, owner).tx.setupRole(ROLES.MINTER, vaultReturns.contract.address.toString());
   await fromSigner(stableCoinContract, owner).tx.setupRole(ROLES.BURNER, vaultReturns.contract.address.toString());
   await fromSigner(stableCoinContract, owner).tx.setupRole(ROLES.VAULT, vaultReturns.contract.address.toString());
